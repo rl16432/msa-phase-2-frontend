@@ -1,24 +1,36 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import axios from "axios";
+import "./App.css";
+import { Button, Container, TextField, Typography } from "@mui/material";
 
 function App() {
+  
+  const OMDB_API_BASE_URL = `http://www.omdbapi.com/`;
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [movies, setMovies] = useState<undefined | any>(undefined);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Container sx={{ my: 3 }}>
+        <Typography variant="h2" sx={{ my: 3 }}>
+          Movie Search
+        </Typography>
+        <TextField
+          value={searchQuery}
+          onChange={(event: any) => {
+            setSearchQuery(event.target.value);
+          }}
+          label="Search for movie"
+          variant="outlined"
+          placeholder="Search"
+          size="small"
+          sx={{ mr: 2 }}
+        />
+        <Button variant="contained">Search</Button>
+        <Typography variant="body1" sx={{}}>
+          {searchQuery}
+        </Typography>
+      </Container>
     </div>
   );
 }
