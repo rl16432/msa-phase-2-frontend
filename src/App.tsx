@@ -1,19 +1,31 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./App.css";
-import { Box, Button, Container, createTheme, TextField, ThemeProvider, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  createTheme,
+  Link,
+  TextField,
+  ThemeProvider,
+  Typography,
+} from "@mui/material";
 
 function App() {
-
   const API_KEY = process.env.REACT_APP_API_KEY;
   const OMDB_API_BASE_URL = `http://www.omdbapi.com`;
 
+  // Search bar content
   const [searchQuery, setSearchQuery] = useState<string>("");
+  // API return results
   const [movies, setMovies] = useState<undefined | any>([]);
 
+  // Adjust global margin/padding factor
   const theme = createTheme({
-    spacing: (factor: number) => `${0.25 * factor}rem`
-  })
+    spacing: (factor: number) => `${0.25 * factor}rem`,
+  });
 
   return (
     <div className="App">
@@ -31,12 +43,93 @@ function App() {
             variant="outlined"
             placeholder="Search"
             size="small"
-            sx={{ mr: 2 }}
+            sx={{ mr: 2, mb: 3 }}
           />
-          <Button variant="contained" onClick={search}>Search</Button>
-          <Typography variant="body1" sx={{}}>
-            {searchQuery}
-          </Typography>
+          <Button variant="contained" onClick={search}>
+            Search
+          </Button>
+          {movies.map((movie: any) => (
+            <Box
+              sx={{
+                border: "1px solid black",
+                borderRadius: "12px",
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                px: 3,
+                py: 3,
+                mt: 3,
+                mx: "auto",
+                width: "60%",
+              }}
+              key={movie.imdbID}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  flexGrow: "1",
+                }}
+              >
+                <Box
+                  textAlign="left"
+                  className="movie-text-box"
+                  sx={{
+                    mr: 3,
+                  }}
+                >
+                  <Link
+                    href={`https://www.imdb.com/title/${movie.imdbID}`}
+                    variant="h6"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <strong>{movie.Title}</strong>
+                  </Link>
+                  <Typography variant="subtitle1">
+                    <strong>Year:</strong> {movie.Year}
+                  </Typography>
+                  <Typography variant="subtitle1">
+                    <strong>Director:</strong> {movie.Director}
+                  </Typography>
+                  <Typography variant="subtitle1">
+                    <strong>Rated:</strong> {movie.Rated}
+                  </Typography>
+                  <Typography variant="subtitle1">
+                    <strong>Box Office:</strong> {movie.BoxOffice}
+                  </Typography>
+                </Box>
+
+                <Box textAlign="left" className="movie-text-box">
+                  <Typography variant="subtitle1">
+                    <strong>Genre:</strong> {movie.Genre}
+                  </Typography>
+                  <Typography variant="subtitle1">
+                    <strong>Runtime:</strong> {movie.Runtime}
+                  </Typography>
+                  <Typography variant="subtitle1">
+                    <strong>Ratings:</strong>
+                  </Typography>
+                  {movie.Ratings != null
+                    ? movie.Ratings.map((rating: any) => (
+                        <Typography key={rating.Source} variant="subtitle1">
+                          {rating.Source}: {rating.Value}
+                        </Typography>
+                      ))
+                    : null}
+                </Box>
+              </Box>
+              <Box
+                component="img"
+                sx={{
+                  maxHeight: 200,
+                  maxWidth: 250,
+                }}
+                alt={`${movie.Title} poster`}
+                src={movie.Poster}
+              />
+            </Box>
+          ))}
         </Container>
       </ThemeProvider>
     </div>
@@ -44,39 +137,37 @@ function App() {
 
   function search() {
     axios
-      .get(OMDB_API_BASE_URL,
-        {
-          params: {
-            apikey: API_KEY,
-            s: searchQuery
-          }
-        })
+      .get(OMDB_API_BASE_URL, {
+        params: {
+          apikey: API_KEY,
+          s: searchQuery, // Search returns undetailed search data
+          type: "movie",
+        },
+      })
       .then((response) => {
-        let movieInfo = response.data.Search
+        let movieInfo = response.data.Search;
 
-        movieInfo = Promise.all(movieInfo.map(
-          (movie: any) => {
+        // Additional requests to get detailed movie data by imdbID
+        movieInfo = Promise.all(
+          movieInfo.map((movie: any) => {
             return axios
-              .get(OMDB_API_BASE_URL,
-                {
-                  params: {
-                    apikey: API_KEY,
-                    i: movie.imdbID
-                  }
-                }
-              )
-              .then(response => {
-                return response.data
+              .get(OMDB_API_BASE_URL, {
+                params: {
+                  apikey: API_KEY,
+                  i: movie.imdbID, // Search by ID
+                },
               })
-          }
-        )).then(movieInfo => {
-          console.log(movieInfo)
-          setMovies(movieInfo)
-        })
+              .then((response) => {
+                return response.data;
+              });
+          })
+        ).then((movieInfo) => {
+          setMovies(movieInfo);
+        });
       })
-      .catch(error => {
-        console.error(error)
-      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 }
 
