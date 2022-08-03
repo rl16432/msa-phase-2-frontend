@@ -21,6 +21,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   // API return results
   const [movies, setMovies] = useState<undefined | any>([]);
+  // Message to display for errors
+  const [message, setMessage] = useState<undefined | string>(undefined);
 
   // Adjust global margin/padding factor
   const theme = createTheme({
@@ -48,6 +50,9 @@ function App() {
           <Button variant="contained" onClick={search}>
             Search
           </Button>
+          {message !== "" && message !== undefined ? (
+            <Alert severity="error">{message}</Alert>
+          ) : null}
           {movies.map((movie: any) => (
             <Box
               sx={{
@@ -145,6 +150,11 @@ function App() {
         },
       })
       .then((response) => {
+        // Display error message
+        if (response.data.Response === "False") {
+          showMessage(response.data.Error);
+          return;
+        }
         let movieInfo = response.data.Search;
 
         // Additional requests to get detailed movie data by imdbID
@@ -168,6 +178,18 @@ function App() {
       .catch((error) => {
         console.error(error);
       });
+  }
+
+  /**
+   * Display alert message on screen for 5 seconds
+   *
+   * @param message
+   */
+  function showMessage(message: string) {
+    setMessage(message);
+    setTimeout(() => {
+      setMessage(undefined);
+    }, 5000);
   }
 }
 
